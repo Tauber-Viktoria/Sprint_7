@@ -30,4 +30,16 @@ def generate_data_courier(include_first_login=True, include_first_password=True,
     return data_courier
 
 
-
+def generate_order_data(color):
+    order_data = {
+        "firstName": "Naruto",
+        "lastName": "Uchiha",
+        "address": "Konoha, 142 apt.",
+        "metroStation": 4,
+        "phone": "+7 800 355 35 35",
+        "rentTime": 5,
+        "deliveryDate": "2020-06-06",
+        "comment": "Saske, come back to Konoha",
+        "color": [color]
+    }
+    return order_data
