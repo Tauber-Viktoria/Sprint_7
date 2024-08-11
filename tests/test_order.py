@@ -5,7 +5,7 @@ from api.order import Order
 from helpers import data
 
 
-@allure.feature("Создание заказа и получение списка заказов")
+@allure.feature("Создание заказа")
 class TestOrder:
     @pytest.mark.parametrize('color',
                              [data.generate_order_data('BLACK'),
@@ -21,6 +21,9 @@ class TestOrder:
                 and 'track' in response.json()), \
             f"Статус код {response.status_code}, track не найден в ответе"
 
+
+@allure.feature("Получение списка заказов")
+class TestGetOrderList:
     @allure.story("Успешное получение списка заказа")
     @allure.title("Проверка, что API возвращает список заказов. Список не пустой. В списке есть id")
     def test_get_order_list(self):
@@ -36,5 +39,3 @@ class TestOrder:
             f"но получили статус код {response.status_code}. "
             f"В ответе {response_json}"
         )
-
-
