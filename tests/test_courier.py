@@ -16,7 +16,9 @@ class TestCreateCourier:
     def test_create_courier_successful(self, data_courier, expected_status_code, expected_response):
         response = requests.post(url.CREATE_COURIER, json=data_courier)
 
-        assert response.status_code == expected_status_code and response.json() == expected_response
+        assert (response.status_code == expected_status_code
+                and response.json() == expected_response), \
+            f'Статус код {response.status_code},В ответе {response.json()}'
 
         login_response = requests.post(url.LOGIN_COURIER,
                                        json={'login': data_courier['login'],
@@ -29,16 +31,18 @@ class TestCreateCourier:
     @allure.title("Создание учетной записи курьера без обязательного поля")
     @pytest.mark.parametrize("data_courier, expected_status_code, expected_response", [
         # Поле login отсутствует
-        (data.generate_data_courier(include_first_login=False), 400, {'Недостаточно данных для создания '
-                                                                      'учетной записи'}),
+        (data.generate_data_courier(include_first_login=False), 400, 'Недостаточно данных для создания '
+                                                                     'учетной записи'),
         # Поле password отсутствует
-        (data.generate_data_courier(include_first_password=False), 400, {'Недостаточно данных для создания '
-                                                                         'учетной записи'})
+        (data.generate_data_courier(include_first_password=False), 400, 'Недостаточно данных для создания '
+                                                                        'учетной записи')
     ])
     def test_create_courier_no_required_field_error(self, data_courier, expected_status_code, expected_response):
         response = requests.post(url.CREATE_COURIER, json=data_courier)
 
-        assert response.status_code == expected_status_code and response.json().get('message') == expected_response
+        assert (response.status_code == expected_status_code
+                and response.json().get('message') == expected_response), \
+            f'Статус код {response.status_code},В ответе {response.json()}'
 
     @allure.story("Ошибка при повторном создании учетной записи курьера с тем же логином")
     @allure.title("Попытка создания учетной записи курьера с уже существующим логином")
@@ -46,8 +50,9 @@ class TestCreateCourier:
         data_courier = create_and_delete_courier
 
         response = requests.post(url.CREATE_COURIER, json=data_courier)
-        assert response.status_code == 409 and response.json().get('message') == ('Этот логин уже используется. '
-                                                                                  'Попробуйте другой.')
+        assert (response.status_code == 409
+                and response.json().get('message') == 'Этот логин уже используется. Попробуйте другой.'), \
+            f'Статус код {response.status_code},В ответе {response.json()}'
 
 
 @allure.feature("Авторизация курьера")
@@ -58,16 +63,16 @@ class TestLoginCourier:
         data_courier = create_and_delete_courier
 
         login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
-        courier_id = login_response.json()['id']
-        assert login_response.status_code == 200 and courier_id, "Courier ID not found in login response"
+        courier_id = login_response.json().get('id')
+        assert (login_response.status_code == 200
+                and courier_id), \
+            f"Статус код {login_response.status_code}, ID курьера не найден в ответе"
 
     @allure.story("Ошибка при отсутствии обязательного поля в запросе на авторизацию")
     @allure.title("Авторизация без обязательного поля")
     @pytest.mark.parametrize("remove_field, expected_status_code, expected_message", [
-        # Поле login отсутствует
-        ("login", 400, "Недостаточно данных для входа"),
-        # Поле password отсутствует
-        ("password", 400, "Недостаточно данных для входа")
+        ("login", 400, "Недостаточно данных для входа"),  # Поле login отсутствует
+        ("password", 400, "Недостаточно данных для входа")  # Поле password отсутствует
     ])
     def test_login_courier_remove_field_error(self, create_and_delete_courier, remove_field,
                                               expected_status_code, expected_message):
@@ -78,16 +83,15 @@ class TestLoginCourier:
 
         login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
 
-        assert login_response.status_code == expected_status_code and login_response.json().get(
-            'message') == expected_message
+        assert (login_response.status_code == expected_status_code
+                and login_response.json().get('message') == expected_message), \
+            f'Статус код {login_response.status_code},В ответе {login_response.json()}'
 
     @allure.story("Ошибка при передаче обязательного поля в запросе в виде '' ")
     @allure.title("Авторизация без значения у обязательного поля")
     @pytest.mark.parametrize("empty_value, expected_status_code, expected_message", [
-        # Поле login отсутствует
-        ("login", 400, "Недостаточно данных для входа"),
-        # Поле password отсутствует
-        ("password", 400, "Недостаточно данных для входа")
+        ("login", 400, "Недостаточно данных для входа"),  # Поле login ''
+        ("password", 400, "Недостаточно данных для входа")  # Поле password ''
     ])
     def test_login_courier_empty_value_error(self, create_and_delete_courier, empty_value,
                                              expected_status_code, expected_message):
@@ -98,19 +102,18 @@ class TestLoginCourier:
 
         login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
 
-        assert login_response.status_code == expected_status_code and login_response.json().get(
-            'message') == expected_message
+        assert (login_response.status_code == expected_status_code
+                and login_response.json().get('message') == expected_message), \
+            f'Статус код {login_response.status_code},В ответе {login_response.json()}'
 
     @allure.story("Ошибка если неправильно указать логин или пароль")
     @allure.title("Авторизация с заменой значения у обязательного поля")
     @pytest.mark.parametrize("error_value, expected_status_code, expected_message", [
-        # Поле login отсутствует
-        ("login", 404, "Учетная запись не найдена"),
-        # Поле password отсутствует
-        ("password", 404, "Учетная запись не найдена")
+        ("login", 404, "Учетная запись не найдена"),  # Поле login не сущестующее
+        ("password", 404, "Учетная запись не найдена")  # Поле password не сущестующее
     ])
-    def test_login_courier_empty_value_error(self, create_and_delete_courier, error_value,
-                                             expected_status_code, expected_message):
+    def test_login_courier_invalid_value_error(self, create_and_delete_courier, error_value,
+                                               expected_status_code, expected_message):
         data_courier = create_and_delete_courier.copy()
 
         if error_value in data_courier:
@@ -118,5 +121,6 @@ class TestLoginCourier:
 
         login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
 
-        assert login_response.status_code == expected_status_code and login_response.json().get(
-            'message') == expected_message
+        assert (login_response.status_code == expected_status_code
+                and login_response.json().get('message') == expected_message), \
+            f'Статус код {login_response.status_code},В ответе {login_response.json()}'
