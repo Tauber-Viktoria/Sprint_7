@@ -1,8 +1,8 @@
 import allure
 import pytest
-import requests
 
-from helpers import url, data
+from api.courier import Courier
+from helpers import data
 
 
 @allure.feature("Создание учетной записи курьера")
@@ -14,18 +14,16 @@ class TestCreateCourier:
         (data.generate_data_courier(include_first_name=False), 201, {'ok': True})  # Поле firstName отсутствует
     ])
     def test_create_courier_successful(self, data_courier, expected_status_code, expected_response):
-        response = requests.post(url.CREATE_COURIER, json=data_courier)
+        response = Courier.create_courier(data_courier)
 
         assert (response.status_code == expected_status_code
                 and response.json() == expected_response), \
             f'Статус код {response.status_code},В ответе {response.json()}'
 
-        login_response = requests.post(url.LOGIN_COURIER,
-                                       json={'login': data_courier['login'],
-                                             'password': data_courier['password']}
-                                       )
+        login_response = Courier.get_login_courier(data_courier.get('login', ''), data_courier.get('password', ''))
+
         courier_id = login_response.json().get('id')
-        requests.delete(f"{url.DELETE_COURIER}/{courier_id}")
+        Courier.delete_courier(courier_id)
 
     @allure.story("Ошибка при создании учетной записи курьера без обязательных полей")
     @allure.title("Создание учетной записи курьера без обязательного поля")
@@ -38,7 +36,7 @@ class TestCreateCourier:
                                                                         'учетной записи')
     ])
     def test_create_courier_no_required_field_error(self, data_courier, expected_status_code, expected_response):
-        response = requests.post(url.CREATE_COURIER, json=data_courier)
+        response = Courier.create_courier(data_courier)
 
         assert (response.status_code == expected_status_code
                 and response.json().get('message') == expected_response), \
@@ -49,7 +47,7 @@ class TestCreateCourier:
     def test_create_courier_repeat_login_error(self, create_and_delete_courier):
         data_courier = create_and_delete_courier
 
-        response = requests.post(url.CREATE_COURIER, json=data_courier)
+        response = Courier.create_courier(data_courier)
         assert (response.status_code == 409
                 and response.json().get('message') == 'Этот логин уже используется. Попробуйте другой.'), \
             f'Статус код {response.status_code},В ответе {response.json()}'
@@ -62,7 +60,7 @@ class TestLoginCourier:
     def test_login_courier_successful(self, create_and_delete_courier):
         data_courier = create_and_delete_courier
 
-        login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
+        login_response = Courier.get_login_courier(data_courier.get('login', ''), data_courier.get('password', ''))
         courier_id = login_response.json().get('id')
         assert (login_response.status_code == 200
                 and courier_id), \
@@ -81,7 +79,7 @@ class TestLoginCourier:
         if remove_field in data_courier:
             data_courier.pop(remove_field)
 
-        login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
+        login_response = Courier.get_login_courier(data_courier.get('login', ''), data_courier.get('password', ''))
 
         assert (login_response.status_code == expected_status_code
                 and login_response.json().get('message') == expected_message), \
@@ -100,7 +98,7 @@ class TestLoginCourier:
         if empty_value in data_courier:
             data_courier[empty_value] = ''
 
-        login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
+        login_response = Courier.get_login_courier(data_courier.get('login', ''), data_courier.get('password', ''))
 
         assert (login_response.status_code == expected_status_code
                 and login_response.json().get('message') == expected_message), \
@@ -119,7 +117,7 @@ class TestLoginCourier:
         if error_value in data_courier:
             data_courier[error_value] = 'errorERRORerror666'
 
-        login_response = requests.post(url.LOGIN_COURIER, json=data_courier)
+        login_response = Courier.get_login_courier(data_courier.get('login', ''), data_courier.get('password', ''))
 
         assert (login_response.status_code == expected_status_code
                 and login_response.json().get('message') == expected_message), \

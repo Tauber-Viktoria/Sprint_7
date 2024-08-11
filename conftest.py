@@ -14,7 +14,7 @@ def create_and_delete_courier():
                                        'login': data_courier['login'],
                                        'password': data_courier['password']}
                                    )
-    courier_id = login_response.json()['id']
+    courier_id = login_response.json().get('id')
 
     yield data_courier
 
