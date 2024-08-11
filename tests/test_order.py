@@ -1,10 +1,8 @@
-import random
-
 import allure
 import pytest
-import requests
 
-from helpers import url, data
+from api.order import Order
+from helpers import data
 
 
 @allure.feature("Создание заказа и получение списка заказов")
@@ -18,7 +16,7 @@ class TestOrder:
     @allure.title("Создание заказа при указании одного из цветов, оба цвета, ни одного цвета. "
                   "Тело ответа содержит track ")
     def test_create_order_successful(self, color):
-        response = requests.post(url.CREATE_ORDER, json=color)
+        response = Order.create_order(color)
         assert (response.status_code == 201
                 and 'track' in response.json()), \
             f"Статус код {response.status_code}, track не найден в ответе"
@@ -26,7 +24,7 @@ class TestOrder:
     @allure.story("Успешное получение списка заказа")
     @allure.title("Проверка, что API возвращает список заказов. Список не пустой. В списке есть id")
     def test_get_order_list(self):
-        response = requests.get(url.LIST_ORDERS)
+        response = Order.get_order_list()
         response_json = response.json()
         first_order = response_json['orders'][0]
         assert (response.status_code == 200
